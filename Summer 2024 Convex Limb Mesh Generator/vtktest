@@ -1,0 +1,40 @@
+import wx
+from wx import glcanvas
+import vtk
+from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
+
+class MainFrame(wx.Frame):
+    def __init__(self, parent, title):
+        super(MainFrame, self).__init__(parent, title=title, size=(800, 600))
+
+        self.panel = wx.Panel(self)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.vtk_widget = wxVTKRenderWindowInteractor(self.panel, -1)
+        self.sizer.Add(self.vtk_widget, 1, wx.EXPAND)
+
+        self.panel.SetSizer(self.sizer)
+        self.Layout()
+
+        self.ren = vtk.vtkRenderer()
+        self.vtk_widget.GetRenderWindow().AddRenderer(self.ren)
+        self.create_scene()
+
+        self.iren = self.vtk_widget.GetRenderWindow().GetInteractor()
+        self.iren.Initialize()
+
+    def create_scene(self):
+        cone = vtk.vtkConeSource()
+        cone_mapper = vtk.vtkPolyDataMapper()
+        cone_mapper.SetInputConnection(cone.GetOutputPort())
+        cone_actor = vtk.vtkActor()
+        cone_actor.SetMapper(cone_mapper)
+        self.ren.AddActor(cone_actor)
+        self.ren.SetBackground(0.1, 0.2, 0.4)
+        self.ren.ResetCamera()
+
+if __name__ == "__main__":
+    app = wx.App(False)
+    frame = MainFrame(None, "VTK with wxPython")
+    frame.Show()
+    app.MainLoop()
