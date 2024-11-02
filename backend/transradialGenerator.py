@@ -6,14 +6,13 @@ def inlinePrint(text):
     sys.stdout.flush()
 inlinePrint("Importing Subprocess")
 import subprocess
-inlinePrint("Importing VTK   ")
+inlinePrint("Importing VTK        ")
 import vtk
 inlinePrint("Importing numpy      ")
 import numpy as np
-inlinePrint("Importing time    ")
+inlinePrint("Importing time       ")
 import time
 inlinePrint("Importing solid2     ")
-start_time = time.time()
 #import solid2 as pyscad
 from solid2 import *
 inlinePrint("Importing bezier   ")
@@ -42,8 +41,13 @@ print("")
 
 
 #Defining variables
-initialZ=70
-finalZ=160
+#initialZ=-100
+#finalZ=500
+lengthSocket=100
+lengthAmputation=150
+lengthFullLimb=200
+
+
 nominalDiam=75 #nominal diameter of limb in mm
 skinOffset=0 #mm offset from skin for mesh
 
@@ -152,6 +156,34 @@ def plotArrayLine(array, ren, colors, color):
     centerActor.GetProperty().SetLineWidth(3)
     ren.AddActor(centerActor)
 
+# Function to read an STL file and find min and max Z values
+def find_min_max_z(stl_file):
+    # Create a reader for the STL file
+    reader = vtk.vtkSTLReader()
+    reader.SetFileName(stl_file)
+    reader.Update()
+
+    # Get the output polydata from the reader
+    polydata = reader.GetOutput()
+
+    # Get the points from the polydata
+    points = polydata.GetPoints()
+
+    # Initialize min and max Z values
+    min_z = float('inf')
+    max_z = float('-inf')
+
+    # Iterate over all points to find min and max Z values
+    for i in range(points.GetNumberOfPoints()):
+        z = points.GetPoint(i)[2]  # Get the Z value
+        if z < min_z:
+            min_z = z
+        if z > max_z:
+            max_z = z
+
+    return min_z, max_z
+
+
 ############################ OpenSCAD Interaction ##################################
 
 #initialize OpenSCAD File
@@ -159,6 +191,12 @@ set_global_fn(facetNum)
 
 
 def main():
+    ### Getting bounds
+    minZ,maxZ = find_min_max_z(f"{filename}.stl")
+    # Set Z values for analysis
+    initialZ=maxZ-lengthSocket
+    finalZ=maxZ
+
     colors = vtkNamedColors()
 
     # Create a cube
@@ -219,7 +257,7 @@ def main():
         try:
             NumPts=points.GetNumberOfPoints()
         except:
-            print(f"Z: {i} Not Valid")
+            inlinePrint(f"Z: {i} Not Valid")
             print(f"Halting slicing at Z = {i-stepZ}, proceed as usual")
             break
 
@@ -363,47 +401,7 @@ def main():
 
 
 
-        ######## End Types #############
-        if weaveEndType=="ring":
-            # Connect only closest adjacent individual weave
-            xDistance = finalZ-initialZ/np.tan(np.pi*weaveAngle/180)
-            antiEndMatched =  round(((2*xDistance)/(np.pi*nominalDiam)-(2*xDistance/(np.pi*nominalDiam)//1))*(weaveNum-1)+.5)
-            for i in range(len(weaveArray)):
-                lowerRingKnot1 = union()
-                lowerRingKnot2 = union()
-                upperRingKnot1 = union()
-                upperRingKnot2 = union()
-                lowerRingKnot1+=hull()(translate(([weaveArray[i][0][0]+centerLine[0][0],weaveArray[i][0][1]+centerLine[0][1],weaveArray[i][0][2]]))(rotate(([0,0,weaveArrayPol[i][0][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[i][0][0]+centerLine[0][0],weaveArrayAnti[i][0][1]+centerLine[0][1],weaveArrayAnti[i][0][2]))(rotate(([0,0,weaveArrayAntiPol[i][0][1]*180/np.pi]))(meshProf)))
-                upperRingKnot1+=hull()(translate(([weaveArray[i][-1][0]+centerLine[-1][0],weaveArray[i][-1][1]+centerLine[-1][1],weaveArray[i][-1][2]]))(rotate(([0,0,weaveArrayPol[i][-1][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[(i+antiEndMatched)%(weaveNum)][-1][0]+centerLine[-1][0],weaveArrayAnti[(i+antiEndMatched)%(weaveNum)][-1][1]+centerLine[-1][1],weaveArrayAnti[i][-1][2]))(rotate(([0,0,weaveArrayAntiPol[(i+antiEndMatched)%(weaveNum)][-1][1]*180/np.pi]))(meshProf)))
-                i = (i+1)%len(weaveArray)
-                lowerRingKnot2+=hull()(translate(([weaveArray[i][0][0]+centerLine[0][0],weaveArray[i][0][1]+centerLine[0][1],weaveArray[i][0][2]]))(rotate(([0,0,weaveArrayPol[i][0][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[i][0][0]+centerLine[0][0],weaveArrayAnti[i][0][1]+centerLine[0][1],weaveArrayAnti[i][0][2]))(rotate(([0,0,weaveArrayAntiPol[i][0][1]*180/np.pi]))(meshProf)))
-                upperRingKnot2+=hull()(translate(([weaveArray[i][-1][0]+centerLine[-1][0],weaveArray[i][-1][1]+centerLine[-1][1],weaveArray[i][-1][2]]))(rotate(([0,0,weaveArrayPol[i][-1][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[(i+antiEndMatched)%(weaveNum)][-1][0]+centerLine[-1][0],weaveArrayAnti[(i+antiEndMatched)%(weaveNum)][-1][1]+centerLine[-1][1],weaveArrayAnti[i][-1][2]))(rotate(([0,0,weaveArrayAntiPol[(i+antiEndMatched)%(weaveNum)][-1][1]*180/np.pi]))(meshProf)))
 
-                model+=hull()(lowerRingKnot1,lowerRingKnot2)
-                model+=hull()(upperRingKnot1,upperRingKnot2)
-
-
-
-
-
-        elif weaveEndType=="knots":
-            # Connect only closest adjacent individual weave
-            xDistance = finalZ-initialZ/np.tan(np.pi*weaveAngle/180)
-            antiEndMatched =  round(((2*xDistance)/(np.pi*nominalDiam)-(2*xDistance/(np.pi*nominalDiam)//1))*(weaveNum-1)+.5)
-            for i in range(len(weaveArray)):
-                model+=hull()(translate(([weaveArray[i][0][0]+centerLine[0][0],weaveArray[i][0][1]+centerLine[0][1],weaveArray[i][0][2]]))(rotate(([0,0,weaveArrayPol[i][0][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[i][0][0]+centerLine[0][0],weaveArrayAnti[i][0][1]+centerLine[0][1],weaveArrayAnti[i][0][2]))(rotate(([0,0,weaveArrayAntiPol[i][0][1]*180/np.pi]))(meshProf)))
-                model+=hull()(translate(([weaveArray[i][-1][0]+centerLine[-1][0],weaveArray[i][-1][1]+centerLine[-1][1],weaveArray[i][-1][2]]))(rotate(([0,0,weaveArrayPol[i][-1][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[(i+antiEndMatched)%(weaveNum)][-1][0]+centerLine[-1][0],weaveArrayAnti[(i+antiEndMatched)%(weaveNum)][-1][1]+centerLine[-1][1],weaveArrayAnti[i][-1][2]))(rotate(([0,0,weaveArrayAntiPol[(i+antiEndMatched)%(weaveNum)][-1][1]*180/np.pi]))(meshProf)))
-        elif weaveEndType=="plate":
-            # Create solid plate at either end
-            lowerEndPlate=union()
-            upperEndPlate=union()
-            for i in range(len(weaveArray)):
-                lowerEndPlate+=hull()(translate(([weaveArray[i][0][0]+centerLine[0][0],weaveArray[i][0][1]+centerLine[0][1],weaveArray[i][0][2]]))(rotate(([0,0,weaveArrayPol[i][0][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[i][0][0]+centerLine[0][0],weaveArrayAnti[i][0][1]+centerLine[0][1],weaveArrayAnti[i][0][2]))(rotate(([0,0,weaveArrayAntiPol[i][0][1]*180/np.pi]))(meshProf)))
-                upperEndPlate+=hull()(translate(([weaveArray[i][-1][0]+centerLine[-1][0],weaveArray[i][-1][1]+centerLine[-1][1],weaveArray[i][-1][2]]))(rotate(([0,0,weaveArrayPol[i][-1][1]*180/np.pi]))(meshProf)),translate((weaveArrayAnti[i][-1][0]+centerLine[-1][0],weaveArrayAnti[i][-1][1]+centerLine[-1][1],weaveArrayAnti[i][-1][2]))(rotate(([0,0,weaveArrayAntiPol[i][-1][1]*180/np.pi]))(meshProf)))
-            model+=hull()(lowerEndPlate)
-            model+=hull()(upperEndPlate)
-        else:
-            print("No end type selected (or typo present). Rendering without ends.")
         # Export OpenSCAD to file
         scad_render_to_file(model, f"{filename}.scad")
         print(f"\nThank you! Total time (including inputs) = {np.round((time.time()-start_time),2)}")

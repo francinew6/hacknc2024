@@ -1,4 +1,4 @@
-#!/Users/jacobrose/Documents/GitHub/hacknc2024/backend/bin/python
+#!/Users/jacobrose/Documents/GitHub/hacknc2024/backend/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
