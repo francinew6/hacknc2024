@@ -1,0 +1,1 @@
+translate([-15,50,0]) import("/Users/jacobrose/Library/CloudStorage/OneDrive-Personal/UNC_Freshman/Helping Hands/Case_1_Tyler/V3.0 Palm.stl");
