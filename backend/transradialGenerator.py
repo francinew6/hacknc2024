@@ -41,41 +41,28 @@ print("")
 
 
 #Defining variables
-#initialZ=-100
-#finalZ=500
-lengthSocket=100
+lengthSocket=200
 lengthAmputation=150
 lengthFullLimb=200
+filename = "OllieScanOriented" #example: TimArm.stl would be TimArm
 
 
-nominalDiam=75 #nominal diameter of limb in mm
-skinOffset=0 #mm offset from skin for mesh
-
-#Weave information
-weaveAngle=45 #degree
-weaveDiam=2.5 #mm
-weaveWidth=6.5 #mm
-weaveGap=0 #mm
-weaveTransitionSpeed = 2 # larger values give sharper weave transitions
-weaveNum=16 #number of weaves crossing each other
-weaveStartAngle=0 #radians angle of initial weave
-weaveEndType = "ring" # ring, plate, knots
+skinOffset=1 #mm offset from skin for mesh
+minimumSocketThickness=2.5 #mm
 
 #Center path information
 centerPathDegree = 20 # level of fit of center path
 
 # Rendering values
-angularRes=360 #number of angular "pixels"
-facetNum=8 #number of facets, $fn in openSCAD
-
-#STL File
-filename = "ReneeGardenerBaseScan" #example: TimArm.stl would be TimArm
-# filename = input("Input filename of STL without suffix: ")
-
+angularRes=90 #number of angular voxels
+verticalRes=100 #number of vertical voxels
+facetNum=4 #number of facets, $fn in openSCAD
 
 #Calculated Variables
-angleStepRad=2*np.pi/angularRes
-stepZ=angleStepRad*(nominalDiam/2)/np.tan(weaveAngle*np.pi/180)
+if (lengthFullLimb-lengthAmputation)>30:
+    wristSpacing=lengthFullLimb-lengthAmputation
+else:
+    wristSpacing=35
 start_time = time.time()
 
 # Translation functions from polar to cartesian coordinates and back
@@ -135,6 +122,14 @@ def createPointPath(initPhi,coords,step,clock):
             currentPhi-=step
     return pathOutput, pathOutputPol
 
+def sparceCoords(coords,angularRes):
+    #Outputs X,Y,Z coordinates - not corrected for centerline
+    solidWrapOutput=np.zeros([len(coords),angularRes,3])
+    for i,l in enumerate(coords):
+        for j,p in enumerate(np.linspace(-np.pi,np.pi, angularRes, endpoint=False)):
+            solidWrapOutput[i,j,:]=pol2cart(radAtPhi(l,p)+skinOffset+minimumSocketThickness,p,l[0][2])
+    return(solidWrapOutput)
+
 def plotArrayLine(array, ren, colors, color):
     centerLinePoints = vtkPoints()
     for i in array:
@@ -191,11 +186,14 @@ set_global_fn(facetNum)
 
 
 def main():
-    ### Getting bounds
+    # Getting bounds
     minZ,maxZ = find_min_max_z(f"{filename}.stl")
+    print(minZ)
+    print(maxZ)
     # Set Z values for analysis
     initialZ=maxZ-lengthSocket
     finalZ=maxZ
+    stepZ=(finalZ-initialZ)/verticalRes
 
     colors = vtkNamedColors()
 
@@ -339,19 +337,21 @@ def main():
     # exit = False
     # while exit==False:
     #     #Render
-    renWin.Render()
-    iren.Start()
+
+
+    # renWin.Render()
+    # iren.Start()
 
 
     # inputHandler = MyInteractorStyle()
 
     # Check if slice looks good
-    proceed = input("Ready to proceed? (y/n) ")
+    proceed = "y" #input("Ready to proceed? (y/n) ")
 
 
 
     if proceed=="y" or proceed=="Y":
-
+        #### Smooth outline Arrays ####
         outlineArrayCartSmooth = []
         outlineArrayPolSmooth = []
 
@@ -369,43 +369,40 @@ def main():
         outlineArrayCart = np.asarray(outlineArrayCartSmooth, dtype=object)
 
 
-        # Create array to store weave values
-        weaveArray = []
-        weaveArrayAnti = []
-        weaveArrayPol = []
-        weaveArrayAntiPol = []
-
-        # Generate Mesh profile
-        meshProf = hull()(translate(([0,-(weaveWidth-weaveDiam)/2,0]))(sphere(d=weaveDiam)),translate(([0,(weaveWidth-weaveDiam)/2,0]))(sphere(d=weaveDiam)))
-
-        # Generate Mesh
+        ############### Generate Solid Inner Sleeve #################
+        sparceOuter = sparceCoords(outlineArray,angularRes)
         model = union()
-        for w,i in enumerate(np.linspace(-np.pi,np.pi,weaveNum, endpoint=False)):
-            pathCurr, pathCurrPol = createPointPath(i,outlineArray,angleStepRad,True)
-            for j in range(len(pathCurr)-1):
-                model+=hull()(translate((pathCurr[j][0]+centerLine[j][0],pathCurr[j][1]+centerLine[j][1],pathCurr[j][2]))(rotate(([0,0,pathCurrPol[j][1]*180/np.pi]))(meshProf)),translate((pathCurr[j+1][0]+centerLine[j+1][0],pathCurr[j+1][1]+centerLine[j+1][1],pathCurr[j+1][2]))(rotate(([0,0,pathCurrPol[j+1][1]*180/np.pi]))(meshProf)))
-            pathCurrAnti, pathCurrAntiPol = createPointPath(i,outlineArray,angleStepRad,False)
-            for j in range(len(pathCurrAnti)-1):
-                model+=hull()(translate((pathCurrAnti[j][0]+centerLine[j][0],pathCurrAnti[j][1]+centerLine[j][1],pathCurrAnti[j][2]))(rotate(([0,0,pathCurrAntiPol[j][1]*180/np.pi]))(meshProf)),translate((pathCurrAnti[j+1][0]+centerLine[j+1][0],pathCurrAnti[j+1][1]+centerLine[j+1][1],pathCurrAnti[j+1][2]))(rotate(([0,0,pathCurrAntiPol[j+1][1]*180/np.pi]))(meshProf)))
-            weaveArray.append(pathCurr)
-            weaveArrayAnti.append(pathCurrAnti)
-            weaveArrayPol.append(pathCurrPol)
-            weaveArrayAntiPol.append(pathCurrAntiPol)
-            sys.stdout.write('\r')
-            sys.stdout.write(f"Weave: {w+1} / {weaveNum}  Time: {np.round((time.time()-start_time),3)} s")
-            sys.stdout.flush()
-        weaveArray = np.asarray(weaveArray, dtype=object)
-        weaveArrayAnti = np.asarray(weaveArrayAnti, dtype=object)
-        weaveArrayPol = np.asarray(weaveArrayPol, dtype=object)
-        weaveArrayAntiPol = np.asarray(weaveArrayAntiPol, dtype=object)
-
-
+        # Add all layers:
+        for i in range(0,len(sparceOuter)-1):
+            layerModel=union()
+            layerModel2=union()
+            for j,x in enumerate(sparceOuter[i]):
+                layerModel+=hull()(
+                    translate((x[0]+centerLine[i][0],x[1]+centerLine[i][1],x[2]))(sphere(d=minimumSocketThickness)),
+                    translate((sparceOuter[i][(j+1)%len(sparceOuter[i])][0]+centerLine[i][0],sparceOuter[i][(j+1)%len(sparceOuter[i])][1]+centerLine[i][1],sparceOuter[i][(j+1)%len(sparceOuter[i])][2]))(sphere(d=minimumSocketThickness)),
+                    translate((sparceOuter[i+1][(j+1)%len(sparceOuter[i+1])][0]+centerLine[i+1][0],sparceOuter[i+1][(j+1)%len(sparceOuter[i+1])][1]+centerLine[i+1][1],sparceOuter[i+1][(j+1)%len(sparceOuter[i+1])][2]))(sphere(d=minimumSocketThickness)))
+                layerModel2+=hull()(
+                    translate((x[0]+centerLine[i][0],x[1]+centerLine[i][1],x[2]))(sphere(d=minimumSocketThickness)),
+                    translate((sparceOuter[i+1][j][0]+centerLine[i+1][0],sparceOuter[i+1][j][1]+centerLine[i+1][1],sparceOuter[i+1][j][2]))(sphere(d=minimumSocketThickness)),
+                    translate((sparceOuter[i+1][(j+1)%len(sparceOuter[i+1])][0]+centerLine[i+1][0],sparceOuter[i+1][(j+1)%len(sparceOuter[i+1])][1]+centerLine[i+1][1],sparceOuter[i+1][(j+1)%len(sparceOuter[i+1])][2]))(sphere(d=minimumSocketThickness)))
+                sys.stdout.write('\r')
+                sys.stdout.write(f"Weave: {i+1} / {len(sparceOuter)}  Time: {np.round((time.time()-start_time),3)} s")
+                sys.stdout.flush()
+            model+=layerModel
+            model+=layerModel2
+        # Add last layer (solid)
+        layerModel=union()
+        for j,x in enumerate(sparceOuter[-1]):
+            layerModel+=hull()(
+                translate((x[0]+centerLine[-1][0],x[1]+centerLine[-1][1],x[2]))(sphere(d=minimumSocketThickness)),
+                translate((sparceOuter[-1][(j+1)%len(sparceOuter[i])][0]+centerLine[-1][0],sparceOuter[-1][(j+1)%len(sparceOuter[-1])][1]+centerLine[-1][1],sparceOuter[-1][(j+1)%len(sparceOuter[-1])][2]))(sphere(d=minimumSocketThickness)),
+                translate((centerLine[-1][0],centerLine[-1][1],x[2]))(sphere(d=minimumSocketThickness)))
+        model+=layerModel
 
 
         # Export OpenSCAD to file
         scad_render_to_file(model, f"{filename}.scad")
-        print(f"\nThank you! Total time (including inputs) = {np.round((time.time()-start_time),2)}")
-        print(f"File is exported at {filename}.scad")
+        print(f"\nOpenSCAD is exported at {filename}.scad")
 
         # Compile to STL using OpenSCAD
         try:
@@ -422,6 +419,9 @@ def main():
             print("Return code:", e.returncode)
             print("Output:", e.output)
             print("Error output:", e.stderr)
+        print(f"Thank you! Total time (including inputs) = {np.round((time.time()-start_time),2)}")
+        print(f"STL is exported at {filename}_output.stl")
+
     else:
         print("Sorry :) Goodbye")
 
