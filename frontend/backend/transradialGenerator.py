@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import os
 def inlinePrint(text):
     sys.stdout.write('\r')
     sys.stdout.write(text)
@@ -478,7 +479,7 @@ def main(uploaded_filename, socket_length, amputation_length, limb_length, wrist
         # Compile to STL using OpenSCAD
         try:
             result = subprocess.run(
-                ["openscad", "--backend","Manifold", "-o", "result.stl", "result.scad"],
+                ["openscad", "--backend","Manifold", "-o", "static/result.stl", "result.scad"],
                 check=True,
                 capture_output=True,
                 text=True

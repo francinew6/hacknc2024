@@ -17,14 +17,19 @@ limb_label = None
 wrist_label = None
 file_label = None
 
-# Ensure result.stl is in a dedicated "static" directory
+# Global variables
+uploaded_filename = None
+scene = None
+stl_object = None
+current_stl_path = None  # Track the current STL path
+
+# Ensure static directory for result files
 static_dir = os.path.join(os.getcwd(), 'static')
 os.makedirs(static_dir, exist_ok=True)
 
-# Copy the result.stl file to the static directory if not already there
-target_path = os.path.join(static_dir, 'result.stl')
-if not os.path.exists(target_path):
-    os.rename(os.path.join(os.getcwd(), 'result.stl'), target_path)
+
+current_stl_path = '/static/resultcopy.stl'
+
 
 # Add static files directory to NiceGUI app
 app.add_static_files('/static', static_dir)
@@ -125,16 +130,18 @@ with ui.row().style('width: 100%; justify-content: center; margin: 0;'):
             ui.button('Generate', on_click=lambda: openscadtest(socket_length.value, amputation_length.value, limb_length.value, wrist_diameter.value))
 
         with ui.column().style('flex: 1; max-width: 50%; padding: 20px; border: 1px solid #ddd; box-sizing: border-box; align-items: center;'):
+            ui.label('Generated Prosthetic Preview').style('text-align: center; width: 100%;')
             with ui.column().style('text-align: center; width: 100%; max-width: 400px; height: 300px;'):
                 with ui.scene().classes('width: 100%; height: 100vh;') as scene:
                     scene.move_camera(y=100)
                     scene.move_camera(z=300)
                     scene.move_camera(look_at_z=150)
-                    #prosthetic = '/static/result.stl'  # Access via relative URL path
-                    prosthetic = f'/static/result.stl?{int(time.time())}'
-                    scene.stl(prosthetic).material('#71A6D8')
-                    #scene.stl(prosthetic)
-            ui.button('Download', on_click=lambda: ui.download('/static/result.stl'))
+                    stl_object = scene.stl(f'{current_stl_path}?{int(time.time())}').material('#71A6D8')
+            with ui.row():
+                with ui.column():
+                    ui.button('Download', on_click=lambda: ui.download(f'{current_stl_path}?{int(time.time())}'))
+                with ui.column():
+                    ui.button('Reset Viewer', on_click=lambda: refresh_scene())
 
 
 
@@ -176,12 +183,31 @@ def openscadtest(socket_length_value, amputation_length_value, limb_length_value
 
         # Run the test function from generatorLite
         transradialGenerator.main(uploaded_filename, socket_length, amputation_length, limb_length, wrist_diameter)
+        
+        # Update the STL path to result.stl
+        global current_stl_path
+        current_stl_path = '/static/result.stl'
+        
+        # Update the scene to display the new model
+        reload_stl_in_scene()
 
     except ValueError:
         socket_label.set_text('Please enter valid numeric values.')
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def refresh_scene():
+    global current_stl_path
+    current_stl_path = '/static/resultcopy.stl'
+    reload_stl_in_scene()
+    ui.run_javascript("window.location.reload();")  # Refresh the page to reinitialize
+    
+def reload_stl_in_scene():
+    """Reloads the STL file in the scene to display the updated result."""
+    if scene and stl_object:
+        scene.clear()  # Clear the existing scene content
+        prosthetic = f'{current_stl_path}?{int(time.time())}'  # Cache-busting URL
+        scene.stl(prosthetic).material('#71A6D8')  # Reload the STL file
 
 # Start the NiceGUI app
 ui.run()
