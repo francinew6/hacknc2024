@@ -24,7 +24,7 @@ We encountered several challenges during the development of ShapeShift:
 Each of these challenges required adaptability, problem-solving, and perseverance, and overcoming them was essential to successfully bringing ShapeShift to life.
 
 ## **Accomplishments that we're proud of**
-We're thrilled to have brought ShapeShift to life with just two people, 24 hours, and a whole lot of determination! From the ground up, we built the entire frontend and backend of the website, tackling each line of code from scratch. We’re especially proud of mastering NiceGUI in record time—even when the documentation left a lot to be desired! This project has been an exciting, fast-paced journey, and we're proud of what we accomplished in such a short period.
+We're thrilled to have brought ShapeShift to life with just two people, 25 hours (thanks to daylight savings time 😉), and a whole lot of determination! From the ground up, we built the entire frontend and backend of the website, tackling each line of code from scratch. We’re especially proud of mastering NiceGUI in record time—even when the documentation left a lot to be desired! This project has been an exciting, fast-paced journey, and we're proud of what we accomplished in such a short period.
 
 ## **What we learned**
 Along the way, we picked up some valuable lessons (and a few battle scars):
