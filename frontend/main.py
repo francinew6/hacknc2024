@@ -108,8 +108,6 @@ with ui.row().style('width: 100%; justify-content: center; margin: 0;'):
             amputation_length = ui.input(label='Amputation Length (mm)', placeholder='Enter length in mm').style('width: 100%; max-width: 400px;')
             limb_length = ui.input(label='Ideal Limb Length (mm)', placeholder='Enter length in mm').style('width: 100%; max-width: 400px;')
             wrist_diameter = ui.input(label='Wrist Diameter (mm)', placeholder='Enter diameter in mm').style('width: 100%; max-width: 400px;')
-
-            # ui.button('Generate', on_click=lambda: test(socket_length.value, amputation_length.value, limb_length.value, wrist_diameter.value)).classes('is-link')
             
             ui.button('Generate', on_click=lambda: openscadtest(socket_length.value, amputation_length.value, limb_length.value, wrist_diameter.value))
 
@@ -148,19 +146,7 @@ def copy_uploaded_file(temp_file, original_file_name):
         new_file.write(temp_file.read())
     print(f'Copied file to {new_file_name}')
     return new_file_name  # Return the full path
-
-# # Define the function for the button click
-# def process_inputs_and_display(arm_file_element, lengthSocket, lengthAmputation, lengthFullLimb, wristDiam):
-#     global socket_label, amputation_label, limb_label, wrist_label, file_label
-#     try:
-#         socket_label.set_text(f'Socket Length: {lengthSocket} mm')
-#         amputation_label.set_text(f'Amputation Length: {lengthAmputation} mm')
-#         limb_label.set_text(f'Full Limb Length: {lengthFullLimb} mm')
-#         wrist_label.set_text(f'Wrist Diameter: {wristDiam} mm')
-#         file_label.set_text(f"Generated output based on {os.path.basename(arm_file_element)}")
-#     except ValueError:
-#         socket_label.set_text('Please enter valid numeric values.')
-        
+  
 def openscadtest(socket_length_value, amputation_length_value, limb_length_value, wrist_diameter_value):
     try:
         # Get user input values
