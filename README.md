@@ -1,8 +1,13 @@
 # ShapeShift Prosthetics HackNC2024
 
-![Cover Page](Homepage.png)
+![Cover Page](startScreen.png)
 
 ## **Inspiration**
+Milo is a boisterous 7 year old boy with a congenital limb difference, meaning he was born without his left hand.  We first met Milo through the Helping Hand Project at UNC, a club which designs and 3D prints prosthetic-like devices for children like Milo.  Speaking to him, we learned that he was interested in 3D printing and had recently bought a 3D printer.  He was incredibly excited to use his new printer to print his own prosthetics, just like the one HHP made for him. This project was inspired by him, and tailored to individuals with transradial limb differences. 
+
+Children are in special need of inexpensive and easy to produce prosthetics, as their continuous and rapid growth makes it a challenge for them to use conventional prosthetics, which can cost upwards of $15,000.  This is the mission of the Helping Hand Project, however the intense and complex computer design needed to create each prosthetic means the team can produce just 2-3 prosthetics per year.  
+
+This project intends to bring custom prosthetic design to the home of thousands of people with transradial amputations and congenital malformations.  Users simply upload a scan of their limb, which can be easily made using popular phone apps, and input 4 measurements from their limbs. Within one minute, they have a downloadable STL file that is specially designed to be 3D printed on consumer printers.
 
 ## **What it does**
 Users seeking an arm prosthesis can easily upload a scan of their arm and provide key measurements of their current and desired limb dimensions. Based on these inputs, the platform will design and generate a customized arm and hand prosthetic file, ready for the user to 3D print.
