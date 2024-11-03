@@ -79,19 +79,19 @@ input[type="file"] {
 
 .background-color {
     background-color: #0B1932;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100%;
 }
 ''')
 
 with ui.header(elevated=True).style('background-color: #0B1932').classes('top-nav'):
         ui.image('images/logo.png').classes('nav-image')
 
-# Title and Introduction
-with ui.column().classes('pt-4'):
-    ui.label('Making prosthetics accessible, customizable, and affordable through the power of 3D printing technology').style('color: #000000; font-size: 3rem; font-weight: 300')
-    ui.label('By streamlining the design and fabrication process, ShapeShift enables users to create tailored prosthetic limbs that meet specific needs, fit comfortably, and enhance mobility. Whether for individuals, clinics, or support organizations, ShapeShift provides an intuitive platform where anyone can generate high-quality, lightweight prosthetics in a fraction of the traditional time and cost. Our mission is to empower users with tools that transform lives, combining digital design and physical production to reshape prosthetics for a modern age.').style('color: #000000; font-size: 1rem; font-weight: 300')
-
 # Transradial Generator Section
 ui.label('Transradial Prosthetic Generator').style('color: #000000; font-size: 2rem; font-weight: bold; text-align: center; width: 100%;')
+ui.label('Making prosthetics accessible, customizable, and affordable through the power of 3D printing technology').style('color: #000000; font-size: 1.2rem; font-weight: bold; width: 100%; text-align: center')
+ui.label('By streamlining the design and fabrication process, ShapeShift enables users to create tailored prosthetic limbs that meet specific needs, fit comfortably, and enhance mobility. Whether for individuals, clinics, or support organizations, ShapeShift provides an intuitive platform where anyone can generate high-quality, lightweight prosthetics in a fraction of the traditional time and cost. Our mission is to empower users with tools that transform lives, combining digital design and physical production to reshape prosthetics for a modern age.').style('color: #000000; font-size: 1rem; font-weight: 400; width: 100%;')
 
 app.add_static_files('/backend', 'backend')
 
@@ -123,6 +123,7 @@ with ui.row().style('width: 100%; justify-content: center; margin: 0;'):
                 with ui.scene().classes('w-full h-64') as scene:
                     prosthetic = '/backend/result.stl'
                     scene.stl(prosthetic)
+
 
 # Global variable to store uploaded filename
 uploaded_filename = None
