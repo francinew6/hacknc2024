@@ -2,6 +2,7 @@ import sys
 import os
 from nicegui import ui, app
 import subprocess
+import time
 # Add the backend folder to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
 import transradialGenerator  # Now you can import it
@@ -129,7 +130,8 @@ with ui.row().style('width: 100%; justify-content: center; margin: 0;'):
                     scene.move_camera(y=100)
                     scene.move_camera(z=300)
                     scene.move_camera(look_at_z=150)
-                    prosthetic = '/static/result.stl'  # Access via relative URL path
+                    #prosthetic = '/static/result.stl'  # Access via relative URL path
+                    prosthetic = f'/static/result.stl?{int(time.time())}'
                     scene.stl(prosthetic).material('#71A6D8')
                     #scene.stl(prosthetic)
             ui.button('Download', on_click=lambda: ui.download('/static/result.stl'))
