@@ -22,8 +22,8 @@ We're thrilled to have brought ShapeShift to life with just two people, 24 hours
 ## **What we learned**
 Along the way, we picked up some valuable lessons (and a few battle scars):
 
-- **Mastering Collaboration with Git:** We honed our skills in collaborative coding, learning the ins and outs of Git to keep our work synchronized. Nothing says teamwork like navigating branch merges together!
-- **Becoming Merge Conflict Pros 😬:** Merge conflicts became an inevitable (and often unexpected) part of our journey. We quickly learned how to resolve them—sometimes gracefully, sometimes through sheer perseverance—but each one brought us closer as collaborators!
+- **Mastering Collaboration with Git:** We honed our skills in collaborative coding, learning the ins and outs of Git to keep our work synchronized. 
+- **Becoming Merge Conflict Pros 😬:** Merge conflicts became an inevitable (and often unexpected) part of our journey. We quickly learned how to resolve them—sometimes gracefully, sometimes through sheer perseverance—but each one brought us closer as collaborators! Nothing says teamwork like navigating branch merges together!
 - **Delving into the World of NiceGUI, Three.js, and Quasar:** NiceGUI came with its own set of quirks and hidden treasures. We uncovered its use of three.js for 3D rendering and Quasar components for UI, gaining a whole new appreciation for the intricate layers powering our interface.
 - **Getting Up Close and Personal with OpenSCAD and Python:** By working with OpenSCAD and Python, we developed a deeper, almost “behind-the-scenes” understanding of these tools. From generating precise 3D models to tweaking tiny details in code, we now know them like old friends.
 Every lesson, from Git mastery to NiceGUI’s hidden gems, has left us better equipped, more skilled, and with a few new tricks up our sleeves for future projects!
