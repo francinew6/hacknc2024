@@ -491,7 +491,7 @@ def main(uploaded_filename, socket_length, amputation_length, limb_length, wrist
             print("Output:", e.output)
             print("Error output:", e.stderr)
         print(f"Thank you! Total time (including inputs) = {np.round((time.time()-start_time),2)}")
-        print(f"STL is exported at {filename}_output.stl")
+        print(f"STL is exported at {filename}")
 
     else:
         print("Sorry :) Goodbye")
