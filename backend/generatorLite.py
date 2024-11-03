@@ -4,6 +4,7 @@ import subprocess
 import vtk
 import numpy as np
 import time
+import os
 #import solid2 as pyscad
 from solid2 import *
 import bezier
@@ -50,22 +51,23 @@ facetNum=4 #number of facets, $fn in openSCAD
 angleStepRad=2*np.pi/angularRes
 stepZ=angleStepRad*(nominalDiam/2)/np.tan(weaveAngle*np.pi/180)
 start_time = time.time()
-def test():
-    # Web Input
-    lengthSocket = Element("socket-length").element.value
-    lengthAmputation = Element("amputation-length").element.value
-    lengthFullLimb=Element("limb-length").element.value
-    wristDiam=Element("wrist-diameter").element.value
+def test(uploaded_filename, socket_length, amputation_length, limb_length, wrist_diameter):
+    # Process inputs
+    lengthSocket = socket_length
+    lengthAmputation = amputation_length
+    lengthFullLimb = limb_length
+    wristDiam = wrist_diameter
     
-    # Access the file input
-    arm_file_element = Element("arm").element.value
-
-    # Update the innerText of the respective elements
-    Element("socket").element.innerText = f"Socket Length: {lengthSocket}"
-    Element("amputation").element.innerText = f"Amputation Length: {lengthAmputation}"
-    Element("limb").element.innerText = f"Full Limb Length: {lengthFullLimb}"
-    Element("wrist").element.innerText = f"Wrist Diameter: {wristDiam}"
-    Element("file").element.innerText = f"STL File Name: {arm_file_element}"
+    # Print or log values for debugging
+    print(f"Processing file: {uploaded_filename}")
+    print(f"Socket Length: {lengthSocket}, Amputation Length: {lengthAmputation}, Full Limb Length: {lengthFullLimb}, Wrist Diameter: {wristDiam}")
+    
+    # Perform any additional computations or processing here...
+    
+    # Return processed values if necessary
+    return lengthSocket, lengthAmputation, lengthFullLimb, wristDiam, uploaded_filename
+    
+    
 
 def inlinePrint(text):
     sys.stdout.write('\r')
