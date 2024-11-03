@@ -42,8 +42,9 @@ print("")
 
 #Defining variables
 lengthSocket=200
-lengthAmputation=150
-lengthFullLimb=200
+lengthAmputation=260
+lengthFullLimb=275
+wristDiam=35
 filename = "OllieScanOriented" #example: TimArm.stl would be TimArm
 
 
@@ -177,6 +178,29 @@ def find_min_max_z(stl_file):
             max_z = z
 
     return min_z, max_z
+
+def largestAnglePoints(points,coords):
+    # takes polar points and polar coords in form (r,phi,z)
+    largestAnglePointOutput=np.zeros([len(points),3])
+    angleArray=np.zeros([len(points)])
+    for i in range(len(points)):
+        rPoint,phiPoint,zPoint=points[i]
+        for j in range(len(coords)):
+            coordLevel=coords[j]
+            coords_sorted = coordLevel[coordLevel[:, 1].argsort()]
+            rCoord=radAtPhi(coords_sorted,phiPoint)
+            print(coords_sorted)
+            print(rCoord)
+            zCoord=coords[j,0,2]
+
+            #print(coords[:,i,:][j])
+            angleAtPoint=np.arccos((rCoord-rPoint)/(zCoord-zPoint))
+            if angleAtPoint>angleArray[i]:
+                angleArray[i]=angleAtPoint
+                largestAnglePointOutput[i]=rCoord,phiPoint,zCoord
+        #largestAnglePointOutput[i]= np.argmax(angleArray)
+    print(largestAnglePointOutput)
+    return largestAnglePointOutput
 
 
 ############################ OpenSCAD Interaction ##################################
@@ -400,9 +424,45 @@ def main():
         model+=layerModel
 
 
+        ##### Wrist unit ########
+        wristUnit=union()
+        wristUnitRingPoints=np.zeros([angularRes,3])
+        for i,a in enumerate(np.linspace(-np.pi,np.pi,angularRes,endpoint=False)):
+            wristUnitRingPoints[i,:]=[wristDiam/2,a,maxZ+wristSpacing]
+
+        sparceOuterCorrected=np.zeros([len(sparceOuter),len(sparceOuter[0]),len(sparceOuter[0][0])])
+        sparceOuterCorrectedPol=np.zeros([len(sparceOuter),len(sparceOuter[0]),len(sparceOuter[0][0])])
+        for i in range(len(sparceOuter)):
+            for j in range(len(sparceOuter[i])):
+                sparceOuterCorrected[i,j,:]=(sparceOuter[i][j][0]+centerLine[i][0],sparceOuter[i][j][1]+centerLine[i][1],sparceOuter[i][j][2])
+                sparceOuterCorrectedPol[i,j,:]=cart2pol(sparceOuter[i][j][0]+centerLine[i][0],sparceOuter[i][j][1]+centerLine[i][1],sparceOuter[i][j][2])
+
+        largeAnglePointIndex = largestAnglePoints(wristUnitRingPoints,sparceOuterCorrectedPol)
+        for i,w in enumerate(wristUnitRingPoints):
+            cartCoord = pol2cart(wristUnitRingPoints[i,0],wristUnitRingPoints[i,1],wristUnitRingPoints[i,2])
+            cartCoord2 = pol2cart(largeAnglePointIndex[i,0],largeAnglePointIndex[i,1],largeAnglePointIndex[i,2])
+            wristUnit+=hull()(
+                    translate(centerLine[-1][0]+cartCoord[0],centerLine[-1][1]+cartCoord[1],cartCoord[2])(cylinder(d=minimumSocketThickness,h=1, _fn=64)),
+                    translate(cartCoord2)(cylinder(d=minimumSocketThickness,h=1, _fn=64))
+                )
+
+        # for i,a in enumerate(np.linspace(-np.pi,np.pi,angularRes,endpoint=False)):
+        #     cartCoord = pol2cart(wristDiam/2,a,maxZ+wristSpacing)
+        #     wristUnit+=hull()(
+        #         translate(centerLine[-1][0]+cartCoord[0],centerLine[-1][1]+cartCoord[1],cartCoord[2])(cylinder(d=minimumSocketThickness,h=1, _fn=64)),
+        #         translate(pol2cart(radAtPhi(sparceOuterCorrectedPol[int(largeAnglePointIndex[i])],a),a,sparceOuterCorrectedPol[int(largeAnglePointIndex[i]),0,0]))(cylinder(d=minimumSocketThickness,h=1, _fn=64))
+        #     )
+
+
+        model+=wristUnit
+
+
+
+
         # Export OpenSCAD to file
         scad_render_to_file(model, f"{filename}.scad")
         print(f"\nOpenSCAD is exported at {filename}.scad")
+        print("Exporting STL file using OpenSCAD backend...")
 
         # Compile to STL using OpenSCAD
         try:
