@@ -41,7 +41,7 @@ print("")
 
 
 #Defining variables
-lengthSocket=200
+lengthSocket=120
 lengthAmputation=260
 lengthFullLimb=275
 wristDiam=35
@@ -189,8 +189,6 @@ def largestAnglePoints(points,coords):
             coordLevel=coords[j]
             coords_sorted = coordLevel[coordLevel[:, 1].argsort()]
             rCoord=radAtPhi(coords_sorted,phiPoint)
-            print(coords_sorted)
-            print(rCoord)
             zCoord=coords[j,0,2]
 
             #print(coords[:,i,:][j])
@@ -441,20 +439,26 @@ def main():
         for i,w in enumerate(wristUnitRingPoints):
             cartCoord = pol2cart(wristUnitRingPoints[i,0],wristUnitRingPoints[i,1],wristUnitRingPoints[i,2])
             cartCoord2 = pol2cart(largeAnglePointIndex[i,0],largeAnglePointIndex[i,1],largeAnglePointIndex[i,2])
+            cartCoord3 = pol2cart(largeAnglePointIndex[(i+1)%len(wristUnitRingPoints),0],largeAnglePointIndex[(i+1)%len(wristUnitRingPoints),1],largeAnglePointIndex[(i+1)%len(wristUnitRingPoints),2])
+            cartCoord4 = pol2cart(wristUnitRingPoints[(i+1)%len(wristUnitRingPoints),0],wristUnitRingPoints[(i+1)%len(wristUnitRingPoints),1],wristUnitRingPoints[(i+1)%len(wristUnitRingPoints),2])
             wristUnit+=hull()(
                     translate(centerLine[-1][0]+cartCoord[0],centerLine[-1][1]+cartCoord[1],cartCoord[2])(cylinder(d=minimumSocketThickness,h=1, _fn=64)),
-                    translate(cartCoord2)(cylinder(d=minimumSocketThickness,h=1, _fn=64))
+                    translate(cartCoord2)(sphere(d=minimumSocketThickness)),
+                    translate(cartCoord3)(sphere(d=minimumSocketThickness))
                 )
-
-        # for i,a in enumerate(np.linspace(-np.pi,np.pi,angularRes,endpoint=False)):
-        #     cartCoord = pol2cart(wristDiam/2,a,maxZ+wristSpacing)
-        #     wristUnit+=hull()(
-        #         translate(centerLine[-1][0]+cartCoord[0],centerLine[-1][1]+cartCoord[1],cartCoord[2])(cylinder(d=minimumSocketThickness,h=1, _fn=64)),
-        #         translate(pol2cart(radAtPhi(sparceOuterCorrectedPol[int(largeAnglePointIndex[i])],a),a,sparceOuterCorrectedPol[int(largeAnglePointIndex[i]),0,0]))(cylinder(d=minimumSocketThickness,h=1, _fn=64))
-        #     )
+            wristUnit+=hull()(
+                    translate(centerLine[-1][0]+cartCoord[0],centerLine[-1][1]+cartCoord[1],cartCoord[2])(cylinder(d=minimumSocketThickness,h=1, _fn=64)),
+                    translate(cartCoord3)(sphere(d=minimumSocketThickness)),
+                    translate(centerLine[-1][0]+cartCoord4[0],centerLine[-1][1]+cartCoord4[1],cartCoord4[2])(cylinder(d=minimumSocketThickness,h=1, _fn=64))
+                )
+        wristUnit+=translate(centerLine[-1][0],centerLine[-1][1],maxZ+1)(cylinder(h=wristSpacing,d=wristDiam,_fn=64))
 
 
         model+=wristUnit
+
+
+        cuttingTool=import_stl("cuttingTool.stl")
+        model-=translate(centerLine[-1][0],centerLine[-1][1],maxZ+wristSpacing+1)(cuttingTool)
 
 
 
