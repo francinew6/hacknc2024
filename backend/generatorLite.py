@@ -186,9 +186,9 @@ def find_min_max_z(stl_file):
 set_global_fn(facetNum)
 
 
-def main():
+def main(uploaded_filename):
     ### Getting bounds
-    minZ,maxZ = find_min_max_z(f"{filename}.stl")
+    minZ,maxZ = find_min_max_z(f"{uploaded_filename}.stl")
     # Set Z values for analysis
     initialZ=maxZ-lengthSocket
     finalZ=maxZ
@@ -197,7 +197,7 @@ def main():
 
     # Create a cube
     cube = vtk.vtkSTLReader()
-    cube.SetFileName(f"{filename}.stl")
+    cube.SetFileName(f"{uploaded_filename}.stl")
     cubeMapper = vtkPolyDataMapper()
     cubeMapper.SetInputConnection(cube.GetOutputPort())
 
@@ -399,14 +399,14 @@ def main():
 
 
         # Export OpenSCAD to file
-        scad_render_to_file(model, f"{filename}.scad")
+        scad_render_to_file(model, "result.scad")
         print(f"\nThank you! Total time (including inputs) = {np.round((time.time()-start_time),2)}")
-        print(f"File is exported at {filename}.scad")
+        print("File is exported at result.scad")
 
         # Compile to STL using OpenSCAD
         try:
             result = subprocess.run(
-                ["openscad", "--enable","all", "-o", f"{filename}_output.stl", f"{filename}.scad"],
+                ["openscad", "--enable","all", "-o", "result.stl", "result.scad"],
                 check=True,
                 capture_output=True,
                 text=True

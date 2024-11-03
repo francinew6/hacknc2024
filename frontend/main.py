@@ -174,16 +174,14 @@ def openscadtest(socket_length_value, amputation_length_value, limb_length_value
             return
 
         # Run the test function from generatorLite
-        lengthSocket, lengthAmputation, lengthFullLimb, wristDiam, arm_file_element = generatorLite.test(
-            uploaded_filename, socket_length, amputation_length, limb_length, wrist_diameter
-        )
+        generatorLite.main(uploaded_filename)
     
         # Update UI labels
         socket_label.set_text(f'Socket Length: {lengthSocket} mm')
         amputation_label.set_text(f'Amputation Length: {lengthAmputation} mm')
         limb_label.set_text(f'Full Limb Length: {lengthFullLimb} mm')
         wrist_label.set_text(f'Wrist Diameter: {wristDiam} mm')
-        file_label.set_text(f"Generated output based on {os.path.basename(arm_file_element)}")
+        file_label.set_text(f"Generated output based on {os.path.basename(uploaded_filename)}")
 
     except ValueError:
         socket_label.set_text('Please enter valid numeric values.')
