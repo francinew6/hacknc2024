@@ -1,6 +1,6 @@
 # ShapeShift Prosthetics HackNC2024
 
-![alt text](Homepage.png)
+![Cover Page](Homepage.png)
 
 ## **Inspiration**
 
