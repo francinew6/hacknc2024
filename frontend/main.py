@@ -3,8 +3,10 @@ import os
 from nicegui import ui, app
 import subprocess
 # Add the backend folder to the Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '../backend'))
-import generatorLite  # Now you can import it
+sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
+import transradialGenerator  # Now you can import it
+
+print("Current Working Directory:", os.getcwd())
 
 # Global variable to store uploaded filename and labels
 uploaded_filename = None
@@ -13,6 +15,18 @@ amputation_label = None
 limb_label = None
 wrist_label = None
 file_label = None
+
+# Ensure result.stl is in a dedicated "static" directory
+static_dir = os.path.join(os.getcwd(), 'static')
+os.makedirs(static_dir, exist_ok=True)
+
+# Copy the result.stl file to the static directory if not already there
+target_path = os.path.join(static_dir, 'result.stl')
+if not os.path.exists(target_path):
+    os.rename(os.path.join(os.getcwd(), 'result.stl'), target_path)
+
+# Add static files directory to NiceGUI app
+app.add_static_files('/static', static_dir)
 
 # Print current directory and list files
 print("Current Directory:", os.getcwd())
@@ -93,8 +107,6 @@ ui.label('Transradial Prosthetic Generator').style('color: #000000; font-size: 2
 ui.label('Making prosthetics accessible, customizable, and affordable through the power of 3D printing technology').style('color: #000000; font-size: 1.2rem; font-weight: bold; width: 100%; text-align: center')
 ui.label('By streamlining the design and fabrication process, ShapeShift enables users to create tailored prosthetic limbs that meet specific needs, fit comfortably, and enhance mobility. Whether for individuals, clinics, or support organizations, ShapeShift provides an intuitive platform where anyone can generate high-quality, lightweight prosthetics in a fraction of the traditional time and cost. Our mission is to empower users with tools that transform lives, combining digital design and physical production to reshape prosthetics for a modern age.').style('color: #000000; font-size: 1rem; font-weight: 400; width: 100%;')
 
-app.add_static_files('/backend', 'backend')
-
 # Input section
 # Create a row that centers its contents and fills the screen width
 with ui.row().style('width: 100%; justify-content: center; margin: 0;'):
@@ -112,15 +124,16 @@ with ui.row().style('width: 100%; justify-content: center; margin: 0;'):
             ui.button('Generate', on_click=lambda: openscadtest(socket_length.value, amputation_length.value, limb_length.value, wrist_diameter.value))
 
         with ui.column().style('flex: 1; max-width: 50%; padding: 20px; border: 1px solid #ddd; box-sizing: border-box; align-items: center;'):
-            socket_label = ui.label().style('text-align: center; width: 100%;')
-            amputation_label = ui.label().style('text-align: center; width: 100%;')
-            limb_label = ui.label().style('text-align: center; width: 100%;')
-            wrist_label = ui.label().style('text-align: center; width: 100%;')
-            file_label = ui.label().style('text-align: center; width: 100%;')
             with ui.column().style('text-align: center; width: 100%; max-width: 400px; height: 300px;'):
-                with ui.scene().classes('w-full h-64') as scene:
-                    prosthetic = '/backend/result.stl'
-                    scene.stl(prosthetic)
+                with ui.scene().classes('width: 100%; height: 100vh;') as scene:
+                    scene.move_camera(y=100)
+                    scene.move_camera(z=300)
+                    scene.move_camera(look_at_z=150)
+                    prosthetic = '/static/result.stl'  # Access via relative URL path
+                    scene.stl(prosthetic).material('#71A6D8')
+                    #scene.stl(prosthetic)
+            ui.button('Download', on_click=lambda: ui.download('/static/result.stl'))
+
 
 
 # Global variable to store uploaded filename
@@ -160,14 +173,7 @@ def openscadtest(socket_length_value, amputation_length_value, limb_length_value
             return
 
         # Run the test function from generatorLite
-        generatorLite.main(uploaded_filename)
-    
-        # Update UI labels
-        socket_label.set_text(f'Socket Length: {lengthSocket} mm')
-        amputation_label.set_text(f'Amputation Length: {lengthAmputation} mm')
-        limb_label.set_text(f'Full Limb Length: {lengthFullLimb} mm')
-        wrist_label.set_text(f'Wrist Diameter: {wristDiam} mm')
-        file_label.set_text(f"Generated output based on {os.path.basename(uploaded_filename)}")
+        transradialGenerator.main(uploaded_filename, socket_length, amputation_length, limb_length, wrist_diameter)
 
     except ValueError:
         socket_label.set_text('Please enter valid numeric values.')
