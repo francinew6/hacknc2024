@@ -1,0 +1,53 @@
+.top-nav {
+    background-color: #0B1932;
+    overflow: hidden;
+}
+
+.nav-image {
+    width: 500px;
+}
+
+.large {
+    font-size: 4rem;
+}
+
+#banner {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    color: black;
+    /* Text color for better contrast */
+}
+
+.img-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 100%;
+    min-height: 100%;
+    height: auto;
+    width: auto;
+    object-fit: cover;
+    z-index: -1;
+}
+
+#banner .column {
+    position: relative;
+    /* Required to overlay the image */
+    z-index: 1;
+    /* Ensures text is above the background image */
+}
+
+label {
+    display: block;
+    margin: 0.4rem 0; /* Optional margin for spacing */
+}
+
+input[type="file"] {
+    display: block; /* Ensures the input is block-level */
+    margin-top: 0.4rem; /* Optional space between label and input */
+}
+
+.background-color {
+    background-color: #0B1932;
+}

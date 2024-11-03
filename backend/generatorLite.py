@@ -1,23 +1,12 @@
 #!/usr/bin/env python
 import sys
-def inlinePrint(text):
-    sys.stdout.write('\r')
-    sys.stdout.write(text)
-    sys.stdout.flush()
-inlinePrint("Importing Subprocess")
 import subprocess
-inlinePrint("Importing VTK        ")
 import vtk
-inlinePrint("Importing numpy      ")
 import numpy as np
-inlinePrint("Importing time       ")
 import time
-inlinePrint("Importing solid2     ")
 #import solid2 as pyscad
 from solid2 import *
-inlinePrint("Importing bezier   ")
 import bezier
-inlinePrint("Importing VTk Modules")
 # noinspection PyUnresolvedReferences
 import vtkmodules.vtkInteractionStyle
 # noinspection PyUnresolvedReferences
@@ -34,19 +23,6 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderWindowInteractor,
     vtkRenderer
 )
-inlinePrint("Imported vtk modules")
-print("")
-
-
-
-
-# Web Input
-lengthSocket=100
-lengthAmputation=150
-lengthFullLimb=200
-wristDiam=60
-filename = "ReneeGardenerBaseScan" #example: TimArm.stl would be TimArm
-
 
 # Defining variables
 nominalDiam=75 #nominal diameter of limb in mm
@@ -74,6 +50,27 @@ facetNum=4 #number of facets, $fn in openSCAD
 angleStepRad=2*np.pi/angularRes
 stepZ=angleStepRad*(nominalDiam/2)/np.tan(weaveAngle*np.pi/180)
 start_time = time.time()
+def test():
+    # Web Input
+    lengthSocket = Element("socket-length").element.value
+    lengthAmputation = Element("amputation-length").element.value
+    lengthFullLimb=Element("limb-length").element.value
+    wristDiam=Element("wrist-diameter").element.value
+    
+    # Access the file input
+    arm_file_element = Element("arm").element.value
+
+    # Update the innerText of the respective elements
+    Element("socket").element.innerText = f"Socket Length: {lengthSocket}"
+    Element("amputation").element.innerText = f"Amputation Length: {lengthAmputation}"
+    Element("limb").element.innerText = f"Full Limb Length: {lengthFullLimb}"
+    Element("wrist").element.innerText = f"Wrist Diameter: {wristDiam}"
+    Element("file").element.innerText = f"STL File Name: {arm_file_element}"
+
+def inlinePrint(text):
+    sys.stdout.write('\r')
+    sys.stdout.write(text)
+    sys.stdout.flush()
 
 # Translation functions from polar to cartesian coordinates and back
 def cart2pol(x, y, z):
