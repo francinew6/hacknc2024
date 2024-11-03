@@ -1,6 +1,18 @@
+import sys
 import os
 from nicegui import ui, app
 import subprocess
+# Add the backend folder to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../backend'))
+import generatorLite  # Now you can import it
+
+# Global variable to store uploaded filename and labels
+uploaded_filename = None
+socket_label = None
+amputation_label = None
+limb_label = None
+wrist_label = None
+file_label = None
 
 # Print current directory and list files
 print("Current Directory:", os.getcwd())
@@ -79,79 +91,103 @@ with ui.column().classes('pt-4'):
     ui.label('By streamlining the design and fabrication process, ShapeShift enables users to create tailored prosthetic limbs that meet specific needs, fit comfortably, and enhance mobility. Whether for individuals, clinics, or support organizations, ShapeShift provides an intuitive platform where anyone can generate high-quality, lightweight prosthetics in a fraction of the traditional time and cost. Our mission is to empower users with tools that transform lives, combining digital design and physical production to reshape prosthetics for a modern age.').style('color: #000000; font-size: 1rem; font-weight: 300')
 
 # Transradial Generator Section
-with ui.column().classes('pt-4 has-text-centered'):
-    ui.label('Transradial Generator').style('color: #000000;').classes('has-text-centered is-size-3')
+ui.label('Transradial Prosthetic Generator').style('color: #000000; font-size: 2rem; font-weight: bold; text-align: center; width: 100%;')
+
+app.add_static_files('/backend', 'backend')
 
 # Input section
-with ui.row().classes('pt-4'):
-    with ui.column().classes('px-6'):
-        ui.label('Please upload your STL file')
-        uploaded_file = ui.upload(on_upload=lambda e: handle_file_upload(e), auto_upload=True).props('accept=.stl')
-        
-        # Regular input fields for numeric values
-        socket_length = ui.input(label='Socket Length (mm)', placeholder='Enter length in mm')
-        amputation_length = ui.input(label='Amputation Length (mm)', placeholder='Enter length in mm')
-        limb_length = ui.input(label='Ideal Limb Length (mm)', placeholder='Enter length in mm')
-        wrist_diameter = ui.input(label='Wrist Diameter (mm)', placeholder='Enter diameter in mm')
+# Create a row that centers its contents and fills the screen width
+with ui.row().style('width: 100%; justify-content: center; margin: 0;'):
+    with ui.row().style('width: 100%; max-width: 1200px; display: flex; gap: 1rem; align-items: start;'):
+        with ui.column().style('flex: 1; max-width: 50%; padding: 20px; border: 1px solid #ddd; box-sizing: border-box; align-items: center;'):
+            ui.label('Please upload your STL file').classes('title is-4').style('text-align: center; width: 100%;')
+            uploaded_file = ui.upload(on_upload=lambda e: handle_file_upload(e), auto_upload=True).props('accept=.stl').style('width: 100%; max-width: 400px;')
+            
+            # Regular input fields for numeric values
+            socket_length = ui.input(label='Socket Length (mm)', placeholder='Enter length in mm').style('width: 100%; max-width: 400px;')
+            amputation_length = ui.input(label='Amputation Length (mm)', placeholder='Enter length in mm').style('width: 100%; max-width: 400px;')
+            limb_length = ui.input(label='Ideal Limb Length (mm)', placeholder='Enter length in mm').style('width: 100%; max-width: 400px;')
+            wrist_diameter = ui.input(label='Wrist Diameter (mm)', placeholder='Enter diameter in mm').style('width: 100%; max-width: 400px;')
 
-        # ui.button('Generate', on_click=lambda: test(socket_length.value, amputation_length.value, limb_length.value, wrist_diameter.value)).classes('is-link')
-        
-        ui.button('Generate', on_click=lambda: openscadtest())
+            # ui.button('Generate', on_click=lambda: test(socket_length.value, amputation_length.value, limb_length.value, wrist_diameter.value)).classes('is-link')
+            
+            ui.button('Generate', on_click=lambda: openscadtest(socket_length.value, amputation_length.value, limb_length.value, wrist_diameter.value))
 
-    with ui.column().classes('px-6'):
-        socket_label = ui.label()
-        amputation_label = ui.label()
-        limb_label = ui.label()
-        wrist_label = ui.label()
-        file_label = ui.label()
+        with ui.column().style('flex: 1; max-width: 50%; padding: 20px; border: 1px solid #ddd; box-sizing: border-box; align-items: center;'):
+            socket_label = ui.label().style('text-align: center; width: 100%;')
+            amputation_label = ui.label().style('text-align: center; width: 100%;')
+            limb_label = ui.label().style('text-align: center; width: 100%;')
+            wrist_label = ui.label().style('text-align: center; width: 100%;')
+            file_label = ui.label().style('text-align: center; width: 100%;')
+            with ui.column().style('text-align: center; width: 100%; max-width: 400px; height: 300px;'):
+                with ui.scene().classes('w-full h-64') as scene:
+                    prosthetic = '/backend/result.stl'
+                    scene.stl(prosthetic)
+
+# Global variable to store uploaded filename
+uploaded_filename = None
 
 # Handle file upload
 def handle_file_upload(event):
+    global uploaded_filename
     # Access the single uploaded file directly
     file_name = event.name  # Get the uploaded file name
-    file_extension = os.path.splitext(file_name)  # Get the file extension
+    file_extension = os.path.splitext(file_name)[1]  # Get the file extension
     
     # Copy the uploaded file to a new file
-    copy_uploaded_file(file_extension['data'], file_name)
+    new_file_name=copy_uploaded_file(event.content, file_name)
+    uploaded_filename = new_file_name  # Store the full path
     
 # Function to copy the uploaded STL file to a new file
-def copy_uploaded_file(data, original_file_name):
-    new_file_name = f"{original_file_name}"  # Specify the new file name
-    with open(new_file_name, 'wb') as new_file:  # Open new file in write-binary mode
-        new_file.write(data)  # Write the uploaded file data to the new file
-    print(f'Copied file to {new_file_name}')  # Print a message to confirm the copy
+def copy_uploaded_file(temp_file, original_file_name):
+    new_file_name = os.path.join('backend', original_file_name)
+    os.makedirs('backend', exist_ok=True)  # Ensure the backend directory exists
+    with open(new_file_name, 'wb') as new_file:
+        temp_file.seek(0)
+        new_file.write(temp_file.read())
+    print(f'Copied file to {new_file_name}')
+    return new_file_name  # Return the full path
 
-# Define the function for the button click
-def test(socket_length_value, amputation_length_value, limb_length_value, wrist_diameter_value):
+# # Define the function for the button click
+# def process_inputs_and_display(arm_file_element, lengthSocket, lengthAmputation, lengthFullLimb, wristDiam):
+#     global socket_label, amputation_label, limb_label, wrist_label, file_label
+#     try:
+#         socket_label.set_text(f'Socket Length: {lengthSocket} mm')
+#         amputation_label.set_text(f'Amputation Length: {lengthAmputation} mm')
+#         limb_label.set_text(f'Full Limb Length: {lengthFullLimb} mm')
+#         wrist_label.set_text(f'Wrist Diameter: {wristDiam} mm')
+#         file_label.set_text(f"Generated output based on {os.path.basename(arm_file_element)}")
+#     except ValueError:
+#         socket_label.set_text('Please enter valid numeric values.')
+        
+def openscadtest(socket_length_value, amputation_length_value, limb_length_value, wrist_diameter_value):
     try:
-        # Convert input values to float and update labels
-        lengthSocket = float(socket_length_value)
-        lengthAmputation = float(amputation_length_value)
-        lengthFullLimb = float(limb_length_value)
-        wristDiam = float(wrist_diameter_value)
+        # Get user input values
+        socket_length = float(socket_length_value)
+        amputation_length = float(amputation_length_value)
+        limb_length = float(limb_length_value)
+        wrist_diameter = float(wrist_diameter_value)
 
+        if uploaded_filename is None:
+            print("No STL file uploaded.")
+            return
+
+        # Run the test function from generatorLite
+        lengthSocket, lengthAmputation, lengthFullLimb, wristDiam, arm_file_element = generatorLite.test(
+            uploaded_filename, socket_length, amputation_length, limb_length, wrist_diameter
+        )
+    
+        # Update UI labels
         socket_label.set_text(f'Socket Length: {lengthSocket} mm')
         amputation_label.set_text(f'Amputation Length: {lengthAmputation} mm')
         limb_label.set_text(f'Full Limb Length: {lengthFullLimb} mm')
         wrist_label.set_text(f'Wrist Diameter: {wristDiam} mm')
+        file_label.set_text(f"Generated output based on {os.path.basename(arm_file_element)}")
+
     except ValueError:
         socket_label.set_text('Please enter valid numeric values.')
-        
-def openscadtest():
-    try:
-            result = subprocess.run(
-                ["openscad", "--enable","all", "-o", "output.stl", "ReneeGardnerBaseScan.scad"],
-                check=True,
-                capture_output=True,
-                text=True
-            )
-            print("OpenSCAD Output:", result.stdout)
-            print("OpenSCAD Errors:", result.stderr)
-    except subprocess.CalledProcessError as e:
-            print("An error occurred:", e)
-            print("Return code:", e.returncode)
-            print("Output:", e.output)
-            print("Error output:", e.stderr)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 # Start the NiceGUI app
